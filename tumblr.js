@@ -9,11 +9,12 @@ var oauth = {
  
 var blog = new tumblr.Blog('crispculture.tumblr.com', oauth);
  
-blog.photo({limit: 2}, function(error, response) {
+blog.photo({limit: 25}, function(error, response) {
   if (error) {
     throw new Error(error);
   }
  
+
 
   //declare variables
   var date_created, media_url, thumbnail_url, text, keyword, norm_description, source_id, source_url, source_user, crawled_retail_shops, crawled_shops_links;
@@ -37,12 +38,13 @@ blog.photo({limit: 2}, function(error, response) {
       text: eachPost.summary,
       keyword: eachPost.tags,
       shop_url: eachPost.link_url,
-      media_url: eachPost.photos[0].original_size,
+      media_url: eachPost.photos[0].original_size.url,
       thumbnail_url: thumbnail
     };
   });
 
-  console.log(ccPhotos);
+  console.log(ccPhotos[ccPhotos.length-1]);
+  console.log("number of photos: ", ccPhotos.length);
 
 
 });

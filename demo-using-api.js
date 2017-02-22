@@ -40,10 +40,14 @@ tumblrAPI.insertPhotos(function(error, response){
 //     connection.end();
 // });
 
-// tumblrAPI.getCCPhotos(function(error, response){
+// tumblrAPI.getPhotosFromBlog(function(error, response){
 //     if(error){
 //         throw error;
 //     }
     
-//     console.log(response);
+//     //console.log(response);
+//     console.log("# of photos: ", response.length);
 // })
+
+// //NOTE: THIS FUNCTION DOES NOT WORK!===============
+// tumblrAPI.getAllPhotos();

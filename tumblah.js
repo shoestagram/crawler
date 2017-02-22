@@ -10,48 +10,31 @@ var oauth = {
 
 
 //=============RE-USABLE FUNCTIONS=============================================
-function shoePostsOnly(el) {
+function shoePostsOnly(blogName, el) {
     /*
       LOGIC 
       1. First filter through posts and keep only posts that have tags associated with "shoes", "sneakers", or "kicks"
       5. of the FILTERED version, MAP below
 
       */
-    var target_keywords = ["sneakers", "shoes", "kicks"];
+    if (blogName !== 'crispculture') {
+        return true;
+    }
+    else {
+        var target_keywords = ["sneakers", "shoes", "kicks"];
 
 
-    // //trying to do it with forEach versus for loops -- not working
-    // var test = response.posts.filter(function(eachPost) {
-    //     //if in the posts tags' property, you find the target_keywords, then return true
-    //     eachPost.tags.forEach(function(eachTag) {
-
-    //       target_keywords.forEach(function(eachTarget){
-    //         if(eachTag.toLowerCase().indexOf(eachTarget) > -1 ){
-    //           return true;
-    //         }
-    //       });
-
-    //         // if (target_keywords.indexOf(eachTag) !== -1) {
-    //         //     console.log("KEEP", eachTag);
-    //         //     return true;
-    //         // }
-    //     });
-
-    // })
-
-
-    //looping through the tags prop of each post
-    for (var j = 0; j < el.tags.length; j++) {
-
-        //looping through each of the target_keywords array
-        for (var i = 0; i < target_keywords.length; i++) {
-            if (el.tags[j].toLowerCase().indexOf(target_keywords[i]) > -1) {
-                //console.log("KEEP", el.tags[j])
-                return true;
+        //looping through the tags prop of each post
+        for (var j = 0; j < el.tags.length; j++) {
+            //looping through each of the target_keywords array
+            for (var i = 0; i < target_keywords.length; i++) {
+                if (el.tags[j].toLowerCase().indexOf(target_keywords[i]) > -1) {
+                    //console.log("KEEP", el.tags[j])
+                    return true;
+                }
             }
         }
     }
-
 }
 
 function unique(arr1, arr2) {
@@ -84,8 +67,8 @@ function unique(arr1, arr2) {
 //===============================================================================
 module.exports = function TumblrAPI(conn) {
     return {
-        getCCPhotos: function(callbackFunction) {
-            var blog = new tumblr.Blog('crispculture.tumblr.com', oauth);
+        getPhotosFromBlog: function(callbackFunction) { //if getAllPhotos function works, add first parameter 'blogName'
+            var blog = new tumblr.Blog(`sweetsoles.tumblr.com`, oauth);
 
             /*
             LOGIC
@@ -112,7 +95,7 @@ module.exports = function TumblrAPI(conn) {
 
                         //MAPPING AND FILTERING RESPONSE INTO ccPhotos
                         ccPhotos = response.posts
-                            .filter(shoePostsOnly)
+                            .filter(shoePostsOnly.bind(this, 'sweetsoles'))
                             .map(function(eachPost) {
                                 var thumbnail, media;
 
@@ -150,58 +133,78 @@ module.exports = function TumblrAPI(conn) {
                     }
                 }
             });
-
+        },
+        getAllPhotos: function(){ //=========THIS DOES NOT WORK!!!!============
+            // var blogs = ['crispculture', 'sweetsoles'];
+            // var totalPhotos = [];
+            
+            // var that = this;
+            // blogs.forEach(function(eachBlog){
+            //     that.getPhotosFromBlog(eachBlog, function(error, photoResponse){
+            //         if(error){
+            //             throw error;
+            //         }
+                    
+            //         photoResponse.forEach(function(eachObject){
+            //             totalPhotos.push(eachObject);
+            //         });
+            //     });
+            // });
+            
+            // //this is outside of the async part, so the callbacks haven't returned yet, but this runs first in call stack. Does not work!!
+            // console.log("# of photos: ", totalPhotos.length);
+            // return totalPhotos;
         },
         insertPhotos: function(callbackFunction) {
             var that = this;
-            this.getCCPhotos(function(error, ccPhotos) {
-                if (error) {
-                    callbackFunction(error);
-                }
-                else {
-                    try {
-                        // var photo = ccPhotos[6];
-                        // console.log("photo BEFORE insert: ", photo);
-
-                        conn.connect();
-
-                        //===========MySQL - INSERT INTO TABLE=======================
-
-                        that.getAllMedia(function(error, mediaResponse) {
-                            if (error) {
-                                throw error;
-                            }
-
-                            var newPhotos = unique(ccPhotos, mediaResponse);
-                            console.log("# of new posts to be INSERTED: ", newPhotos.length);
-                            
-
-                            newPhotos.forEach(function(photo) {
-                                conn.query('INSERT INTO media (createdAt, media_url, thumbnail_url, text, keyword, source_url, source_user, source_id, shop_url, crawled_shops_links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [photo.date_created, photo.media_url, photo.thumbnail_url, photo.text, photo.keyword, photo.source_url, photo.source_user, photo.source_id, photo.shop_url, photo.crawled_shops_links],
-                                    function(error, newMedia, fields) {
-                                        if (error) {
-                                            throw error;
-                                        }
-
-                                        conn.query('SELECT * FROM media WHERE id = ?', [newMedia.insertId], function(error, postTable) {
-                                            if (error) {
-                                                throw error;
-                                            }
-
-                                            //console.log(postTable[0]);
-
-                                            callbackFunction(null, postTable[0]);
-                                        });
-                                    });//closing bracket for SQL INSERT
-                            }) //closing brackets newPhotos.forEach
-                        }) //closing brackets of this.getAllMedia
-                        
-                    } //closing bracket of try
-                    catch (error) {
+            this.getPhotosFromBlog(function(error, ccPhotos) {
+                    if (error) {
                         callbackFunction(error);
                     }
-                } //closing bracket of ELSE of this.getCCPhotos
-            })//closing bracket of this.getCCPhotos
+                    else {
+                        try {
+                            // var photo = ccPhotos[6];
+                            // console.log("photo BEFORE insert: ", photo);
+
+                            conn.connect();
+
+                            //===========MySQL - INSERT INTO TABLE=======================
+
+                            that.getAllMedia(function(error, mediaResponse) {
+                                    if (error) {
+                                        throw error;
+                                    }
+
+                                    var newPhotos = unique(ccPhotos, mediaResponse);
+                                    console.log("# of new posts to be INSERTED: ", newPhotos.length);
+
+
+                                    newPhotos.forEach(function(photo) {
+                                            conn.query('INSERT INTO media (date_created, media_url, thumbnail_url, text, keyword, source_url, source_user, source_id, shop_url, crawled_shops_links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [photo.date_created, photo.media_url, photo.thumbnail_url, photo.text, photo.keyword, photo.source_url, photo.source_user, photo.source_id, photo.shop_url, photo.crawled_shops_links],
+                                                function(error, newMedia, fields) {
+                                                    if (error) {
+                                                        throw error;
+                                                    }
+
+                                                    conn.query('SELECT * FROM media WHERE id = ?', [newMedia.insertId], function(error, postTable) {
+                                                        if (error) {
+                                                            throw error;
+                                                        }
+
+                                                        //console.log(postTable[0]);
+
+                                                        callbackFunction(null, postTable[0]);
+                                                    });
+                                                }); //closing bracket for SQL INSERT
+                                        }) //closing brackets newPhotos.forEach
+                                }) //closing brackets of this.getAllMedia
+
+                        } //closing bracket of try
+                        catch (error) {
+                            callbackFunction(error);
+                        }
+                    } //closing bracket of ELSE of this.getPhotos
+                }) //closing bracket of this.getPhotos
         }, //closing bracket for getShoePhotos function
         getAllMedia: function(callbackFunction) {
 

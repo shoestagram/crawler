@@ -5,8 +5,8 @@ USE DATABASE shoestagram;
 
 CREATE TABLE `media` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `createdAt` DATETIME NOT NULL,
-  `updatedAt` DATETIME NOT NULL,
+  `date_created` DATETIME NOT NULL,
+  `date_updated` DATETIME NOT NULL,
   `media_url` varchar(200) DEFAULT NULL,
   `thumbnail_url` varchar(200) DEFAULT NULL,
   `text` varchar(200) DEFAULT NULL,
@@ -15,6 +15,7 @@ CREATE TABLE `media` (
   `source_url` varchar(200) DEFAULT NULL,
   `source_user` varchar(200) DEFAULT NULL,
   `source_id` varchar(200) DEFAULT NULL,
+  `shop_url` varchar(200) DEFAULT NULL,
   `crawled_retails_shops` boolean DEFAULT NULL,
   `crawled_shops_links` boolean DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -46,3 +47,7 @@ INSERT INTO keywords (keywords) VALUES ('adidas, ultraboost, ultraboost uncaged,
 ("raf simons, adidas by raf simons, adidas x raf simons, adidas, ozweego 2, ssense, style, fashion, menswear, sneakers, shoes, kicks, trainers");
 --------------------------------------------------------------------------------
 
+SELECT id, source_id, shop_links FROM media;
+
+--queries
+SELECT id, source_id FROM media ORDER BY source_id ASC;

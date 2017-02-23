@@ -37,8 +37,8 @@ var queryStr = `
                   crawled_retails_shops,
                   crawled_shops_links,
                   shop_url
-                FROM media LIMIT 3 OFFSET 0
-            `; //testing it on 3 items from media table first!!
+                FROM media
+            `; 
 
 conn.query(queryStr)
     .then(function(mediaItems) {
@@ -80,7 +80,7 @@ conn.query(queryStr)
                         date_created: new Date(),
                         price: (items[i].ItemAttributes.ListPrice) ? items[i].ItemAttributes.ListPrice.FormattedPrice : null,
                         url: items[i].DetailPageURL,
-                        description: items[0].ItemAttributes.Title,
+                        description: items[i].ItemAttributes.Title,
                         media_id: mediaItem
                     };
 

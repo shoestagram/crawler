@@ -34,3 +34,6 @@ INSERT INTO retail_shops (date_created, supplier_name, address, city, province, 
 
 --Feb 21 2017 - for some reason, mysql not allowing me to TRUNCATE retail_shops, and re-add above in with a date timestamp
 --so now all table has stores, but no dates to when they were created. Will leave for now.
+
+UPDATE retail_shops SET geo_loc='45 -73' where id =1;
+SELECT id, geo_loc FROM retail_shops;

@@ -17,7 +17,7 @@ Using the nodeJS tumblr wrapper, it makes a callback to tumblr's API to a specif
 ## Amazon
 Using the Amazon Product Advertising API, and the nodeJS wrapper for it (https://github.com/dmcquay/node-apac), a query is first called to our MySQL database to get all the media items in the Media Table. Then looping through each item, a "fetch" was done to retrieve an amazon URL link, price, and description of that item. Once found, it is then inserted into shop_links table. 
 ###### Files used: ######
--amazon2.js
+- amazon2.js
 
 ## Store Locator
 Not many sneaker stores in Montreal, so the stores were found just through google maps search. Then their coordinates were found by pulling the address, city, and province from the Media table, then putting that into a request to the Google Maps Geocoding API to get each store's latitude and longitudes. Once found, values were then updated as 1 string in the Retail_shops table.

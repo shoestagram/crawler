@@ -38,7 +38,7 @@ var queryStr = `
                   crawled_shops_links,
                   shop_url
                 FROM media
-            `; 
+            `;
 
 conn.query(queryStr)
     .then(function(mediaItems) {
@@ -90,7 +90,7 @@ conn.query(queryStr)
 
                 //insert into shop_links table
                 var queryStr = `
-                  INSERT INTO shop_links VALUES (null, now(), now(), ?, ?, ?, ${mediaItem.id})
+                  INSERT INTO shop_links (date_created, source, price, url, description, media_id) VALUES (now(), "amazon", ?, ?, ?, ${mediaItem.id})
                 `;
 
                 links.forEach(function(link) {

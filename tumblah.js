@@ -78,13 +78,6 @@ module.exports = function TumblrAPI(conn) {
         getPhotosFromBlog: function(callbackFunction) { 
             var blog = new tumblr.Blog(`sweetsoles.tumblr.com`, oauth);
 
-            /*
-            LOGIC
-            1. Just map most recent 25 posts of crispculture/sweetsoles blog to Allen's MEDIA table
-            2. Filter out only the posts that have keywords of "sneakers", "shoes", "kicks" and map to MEDIA table
-            3. Check for duplicates. Check if source_id exists in MEDIA table, only INSERT posts where source_id d.n.e. into MEDIA table
-            */
-
             //50 is the limit of posts I can obtain with the blog.photo API call
             //CALLBACK FUNCTION
             blog.photo({
@@ -144,48 +137,48 @@ module.exports = function TumblrAPI(conn) {
         insertPhotos: function(callbackFunction) {
             var that = this;
             this.getPhotosFromBlog(function(error, ccPhotos) {
-                    if (error) {
-                        callbackFunction(error);
-                    }
-                    else {
-                        try {
+                if (error) {
+                    callbackFunction(error);
+                }
+                else {
+                    try {
 
-                            conn.connect();
+                        conn.connect();
 
-                            //===========MySQL - INSERT INTO TABLE=======================
+                        //===========MySQL - INSERT INTO TABLE=======================
 
-                            that.getAllMedia(function(error, mediaResponse) {
-                                    if (error) {
-                                        throw error;
-                                    }
+                        that.getAllMedia(function(error, mediaResponse) {
+                                if (error) {
+                                    throw error;
+                                }
 
-                                    var newPhotos = unique(ccPhotos, mediaResponse);
-                                    console.log("# of new posts to be INSERTED: ", newPhotos.length);
+                                var newPhotos = unique(ccPhotos, mediaResponse);
+                                console.log("# of new posts to be INSERTED: ", newPhotos.length);
 
 
-                                    newPhotos.forEach(function(photo) {
-                                            conn.query('INSERT INTO media (date_created, media_url, thumbnail_url, text, keyword, source_url, source_user, source_id, shop_url, crawled_shops_links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [photo.date_created, photo.media_url, photo.thumbnail_url, photo.text, photo.keyword, photo.source_url, photo.source_user, photo.source_id, photo.shop_url, photo.crawled_shops_links],
-                                                function(error, newMedia, fields) {
+                                newPhotos.forEach(function(photo) {
+                                        conn.query('INSERT INTO media (date_created, media_url, thumbnail_url, text, keyword, source_url, source_user, source_id, shop_url, crawled_shops_links) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [photo.date_created, photo.media_url, photo.thumbnail_url, photo.text, photo.keyword, photo.source_url, photo.source_user, photo.source_id, photo.shop_url, photo.crawled_shops_links],
+                                            function(error, newMedia, fields) {
+                                                if (error) {
+                                                    throw error;
+                                                }
+
+                                                conn.query('SELECT * FROM media WHERE id = ?', [newMedia.insertId], function(error, postTable) {
                                                     if (error) {
                                                         throw error;
                                                     }
 
-                                                    conn.query('SELECT * FROM media WHERE id = ?', [newMedia.insertId], function(error, postTable) {
-                                                        if (error) {
-                                                            throw error;
-                                                        }
+                                                    callbackFunction(null, postTable[0]);
+                                                });
+                                        }); //closing bracket for MySQL INSERT
+                                }) //closing brackets newPhotos.forEach
+                        }) //closing brackets of this.getAllMedia
 
-                                                        callbackFunction(null, postTable[0]);
-                                                    });
-                                                }); //closing bracket for SQL INSERT
-                                        }) //closing brackets newPhotos.forEach
-                                }) //closing brackets of this.getAllMedia
-
-                        } //closing bracket of try
-                        catch (error) {
-                            callbackFunction(error);
-                        }
-                    } //closing bracket of ELSE of this.getPhotos
+                    } //closing bracket of try
+                    catch (error) {
+                        callbackFunction(error);
+                    }
+                } //closing bracket of ELSE of this.getPhotos
             }) //closing bracket of this.getPhotos
         }, //closing bracket for getShoePhotos function
         getAllMedia: function(callbackFunction) {

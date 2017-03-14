@@ -13,6 +13,7 @@ var conn = mysql.createPool({
 //reference: https://github.com/dmcquay/node-apac
 const {OperationHelper} = require('apac');
 
+//NOTE: see secret.js for proper keys
 const opHelper = new OperationHelper({
     awsId: 'AKIA',
     awsSecret: 'xe',
@@ -45,6 +46,8 @@ conn.query(queryStr)
 
         mediaItems.forEach(function(mediaItem) {
             var words = mediaItem.keyword;
+
+            //choosing only the first 3 hashtags to use in 'Keywords' parameter in Amazon API call
             var newWords = words.split(", ")
                 .filter(value => value.length > 3)
                 .slice(0, 3)
@@ -58,11 +61,6 @@ conn.query(queryStr)
                 'ResponseGroup': 'ItemAttributes,Offers'
             }).then((response) => {
                 var items = response.result.ItemSearchResponse.Items.Item;
-                // console.log("items: ",  items);
-                // console.log("item 1's url: ", items[0].DetailPageURL);
-                // console.log("item 1's description: ", items[0].ItemAttributes.Title)
-                // console.log("item 1's listprice: ", items[0].ItemAttributes.ListPrice.FormattedPrice); //Returns price in $6.97 USD. If want no decimals, but in cents to keep number purity, ListPrice.Amount
-                // console.log("item 1's lowestnewprice: ", items[0].OfferSummary.LowestNewPrice.FormattedPrice); //if want cents, target LowestNewPrice.Amount
 
                 //only return max of 5 amazon links per media item 
                 var length;

@@ -13,8 +13,8 @@ var oauth = {
 function shoePostsOnly(blogName, el) {
     /*
       LOGIC 
-      1. First filter through posts and keep only posts that have tags associated with "shoes", "sneakers", or "kicks"
-      5. of the FILTERED version, MAP below
+      1. This function is only to FILTER out the shoe photos from clothing photos from the 'crispculture' tumblr blog. If another blog is passed to this function, return TRUE and skip this function
+      2. If blogName === 'crispculture', filter through posts and keep only posts that have tags associated with "shoes", "sneakers", or "kicks"
 
       */
     if (blogName !== 'crispculture') {
@@ -37,6 +37,8 @@ function shoePostsOnly(blogName, el) {
     }
 }
 
+
+//function prevents duplicates from being added to the MEDIA table
 function unique(arr1, arr2) {
     var uniqueArr = [];
     var uniqueIds = [];
@@ -64,21 +66,26 @@ function unique(arr1, arr2) {
 
 
 
-//===============================================================================
+//================================TUMBLR API===============================================
+/*
+TumblrAPI has 3 functions:
+1. getPhotosFromBlog - does call to Tumblr photo posts API 
+2. insertMedia - checks for duplicates, and inserts new Tumblr photos to our MySQL database
+3. getAllMedia - Pulls all the media photos from our MySQL database
+*/
 module.exports = function TumblrAPI(conn) {
     return {
-        getPhotosFromBlog: function(callbackFunction) { //if getAllPhotos function works, add first parameter 'blogName'
+        getPhotosFromBlog: function(callbackFunction) { 
             var blog = new tumblr.Blog(`sweetsoles.tumblr.com`, oauth);
 
             /*
             LOGIC
-            1. Just map most recent 25 posts of crispculture blog to Allen's MEDIA table
+            1. Just map most recent 25 posts of crispculture/sweetsoles blog to Allen's MEDIA table
             2. Filter out only the posts that have keywords of "sneakers", "shoes", "kicks" and map to MEDIA table
-            3. Write out code to insert data in Allen's MySQL MEDIA table
-            4. Write code to check if source_id exists in MEDIA table, only INSERT posts where source_id d.n.e. into MEDIA table
+            3. Check for duplicates. Check if source_id exists in MEDIA table, only INSERT posts where source_id d.n.e. into MEDIA table
             */
 
-            //50 is the limit of posts I can obtain with the blog API call in line 61
+            //50 is the limit of posts I can obtain with the blog.photo API call
             //CALLBACK FUNCTION
             blog.photo({
                 limit: 50
@@ -91,7 +98,7 @@ module.exports = function TumblrAPI(conn) {
                         //declare variables
                         var date_created, media_url, thumbnail_url, text, keyword, norm_description, source_id, source_url, source_user, crawled_retail_shops, crawled_shops_links;
 
-                        var ccPhotos = []; //THIS IS WHERE ALL THE TABLE INFORMATION FOR EACH PHOTO FROM crispCulture blog will be pushed into
+                        var ccPhotos = []; //THIS IS WHERE ALL THE TABLE INFORMATION FOR EACH PHOTO FROM crispCulture/sweetsoles blog will be pushed into
 
                         //MAPPING AND FILTERING RESPONSE INTO ccPhotos
                         ccPhotos = response.posts
@@ -134,27 +141,6 @@ module.exports = function TumblrAPI(conn) {
                 }
             });
         },
-        getAllPhotos: function(){ //=========THIS DOES NOT WORK!!!!============
-            // var blogs = ['crispculture', 'sweetsoles'];
-            // var totalPhotos = [];
-            
-            // var that = this;
-            // blogs.forEach(function(eachBlog){
-            //     that.getPhotosFromBlog(eachBlog, function(error, photoResponse){
-            //         if(error){
-            //             throw error;
-            //         }
-                    
-            //         photoResponse.forEach(function(eachObject){
-            //             totalPhotos.push(eachObject);
-            //         });
-            //     });
-            // });
-            
-            // //this is outside of the async part, so the callbacks haven't returned yet, but this runs first in call stack. Does not work!!
-            // console.log("# of photos: ", totalPhotos.length);
-            // return totalPhotos;
-        },
         insertPhotos: function(callbackFunction) {
             var that = this;
             this.getPhotosFromBlog(function(error, ccPhotos) {
@@ -163,8 +149,6 @@ module.exports = function TumblrAPI(conn) {
                     }
                     else {
                         try {
-                            // var photo = ccPhotos[6];
-                            // console.log("photo BEFORE insert: ", photo);
 
                             conn.connect();
 
@@ -191,8 +175,6 @@ module.exports = function TumblrAPI(conn) {
                                                             throw error;
                                                         }
 
-                                                        //console.log(postTable[0]);
-
                                                         callbackFunction(null, postTable[0]);
                                                     });
                                                 }); //closing bracket for SQL INSERT
@@ -204,7 +186,7 @@ module.exports = function TumblrAPI(conn) {
                             callbackFunction(error);
                         }
                     } //closing bracket of ELSE of this.getPhotos
-                }) //closing bracket of this.getPhotos
+            }) //closing bracket of this.getPhotos
         }, //closing bracket for getShoePhotos function
         getAllMedia: function(callbackFunction) {
 
